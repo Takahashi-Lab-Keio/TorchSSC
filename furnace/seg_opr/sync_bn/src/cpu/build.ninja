@@ -1,7 +1,7 @@
 ninja_required_version = 1.3
 cxx = c++
 
-cflags = -DTORCH_EXTENSION_NAME=syncbn_cpu -DTORCH_API_INCLUDE_EXTENSION_H -isystem /home/SENSETIME/chenxiaokang/anaconda3/lib/python3.6/site-packages/torch/lib/include -isystem /home/SENSETIME/chenxiaokang/anaconda3/lib/python3.6/site-packages/torch/lib/include/torch/csrc/api/include -isystem /home/SENSETIME/chenxiaokang/anaconda3/lib/python3.6/site-packages/torch/lib/include/TH -isystem /home/SENSETIME/chenxiaokang/anaconda3/lib/python3.6/site-packages/torch/lib/include/THC -isystem /home/SENSETIME/chenxiaokang/anaconda3/include/python3.6m -D_GLIBCXX_USE_CXX11_ABI=0 -fPIC -std=c++11
+cflags = -DTORCH_EXTENSION_NAME=syncbn_cpu -DTORCH_API_INCLUDE_EXTENSION_H -isystem /opt/conda/envs/ssc/lib/python3.6/site-packages/torch/lib/include -isystem /opt/conda/envs/ssc/lib/python3.6/site-packages/torch/lib/include/torch/csrc/api/include -isystem /opt/conda/envs/ssc/lib/python3.6/site-packages/torch/lib/include/TH -isystem /opt/conda/envs/ssc/lib/python3.6/site-packages/torch/lib/include/THC -isystem /opt/conda/envs/ssc/include/python3.6m -D_GLIBCXX_USE_CXX11_ABI=0 -fPIC -std=c++11
 ldflags = -shared
 
 rule compile
@@ -12,8 +12,8 @@ rule compile
 rule link
   command = $cxx $in $ldflags -o $out
 
-build operator.o: compile /home/SENSETIME/chenxiaokang/Desktop/seg/torchseg/furnace/seg_opr/sync_bn/src/cpu/operator.cpp
-build syncbn_cpu.o: compile /home/SENSETIME/chenxiaokang/Desktop/seg/torchseg/furnace/seg_opr/sync_bn/src/cpu/syncbn_cpu.cpp
+build operator.o: compile /TorchSSC/furnace/seg_opr/sync_bn/src/cpu/operator.cpp
+build syncbn_cpu.o: compile /TorchSSC/furnace/seg_opr/sync_bn/src/cpu/syncbn_cpu.cpp
 
 build syncbn_cpu.so: link operator.o syncbn_cpu.o
 

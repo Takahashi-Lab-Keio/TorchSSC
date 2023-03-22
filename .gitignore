@@ -6,6 +6,7 @@ log/
 *.jpg
 *.log
 *.pth
+*.txt
 __pycache__
-
+furnace/apex/build
 
