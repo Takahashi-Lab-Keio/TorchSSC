@@ -50,7 +50,6 @@ class Engine(object):
         else:
             assert isinstance(custom_parser, argparse.ArgumentParser)
             self.parser = custom_parser
-
         self.inject_default_parser()
         self.args = self.parser.parse_args()
 
@@ -58,8 +57,10 @@ class Engine(object):
 
         if 'WORLD_SIZE' in os.environ:
             self.distributed = int(os.environ['WORLD_SIZE']) >= 1
+            print("world_size", os.environ['WORLD_SIZE'])
 
         if self.distributed:
+            print("bbbbbbbb")
             self.local_rank = self.args.local_rank
             self.world_size = int(os.environ['WORLD_SIZE'])
             torch.cuda.set_device(self.local_rank)
@@ -67,6 +68,7 @@ class Engine(object):
             dist.init_process_group(backend="nccl", init_method='env://')
             self.devices = [i for i in range(self.world_size)]
         else:
+            print("ccccccccc")
             self.devices = parse_devices(self.args.devices)
 
     def inject_default_parser(self):

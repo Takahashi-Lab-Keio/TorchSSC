@@ -34,22 +34,27 @@ parser = argparse.ArgumentParser()
 
 port = str(int(float(time.time())) % 20)
 os.environ['MASTER_PORT'] = str(10097 + int(port))
+local_rank = os.environ['LOCAL_RANK']
+
+print("1: passed")
 
 with Engine(custom_parser=parser) as engine:
     args = parser.parse_args()
+    print("2: passed")
 
     cudnn.benchmark = True
     seed = config.seed
     if engine.distributed:
-        seed = engine.local_rank
+        seed = local_rank
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
+    print("2: passed")
 
     # data loader
     train_loader, train_sampler = get_train_loader(engine, NYUv2)
-
-    if engine.distributed and (engine.local_rank == 0):
+    print("2: passed")
+    if engine.distributed and (local_rank == 0):
         tb_dir = config.tb_dir + '/{}'.format(time.strftime("%b%d_%d-%H-%M", time.localtime()))
         generate_tb_dir = config.tb_dir + '/tb'
         logger = SummaryWriter(log_dir=tb_dir)
@@ -61,7 +66,7 @@ with Engine(custom_parser=parser) as engine:
 
     if engine.distributed:
         BatchNorm2d = SyncBatchNorm
-
+    print("3: passed")
     model = Network(class_num=config.num_classes, feature=128, bn_momentum=config.bn_momentum,
                     pretrained_model=config.pretrained_model,
                     norm_layer=BatchNorm2d)
@@ -73,7 +78,7 @@ with Engine(custom_parser=parser) as engine:
     transformed_state_dict = {}
     for k, v in state_dict.items():
         transformed_state_dict[k.replace('.bn.', '.')] = v
-
+    print("4: passed")
     model.backbone.load_state_dict(transformed_state_dict, strict=False)
 
     # group weight and config optimizer
@@ -98,7 +103,7 @@ with Engine(custom_parser=parser) as engine:
     # config lr policy
     total_iteration = config.nepochs * config.niters_per_epoch
     lr_policy = PolyLR(base_lr, config.lr_power, total_iteration)
-
+    print("5: passed")
     if engine.distributed:
         print('distributed !!')
         if torch.cuda.is_available():
@@ -113,7 +118,7 @@ with Engine(custom_parser=parser) as engine:
                           optimizer=optimizer)
     if engine.continue_state_object:
         engine.restore_checkpoint()
-
+    print("6: passed")
     model.train()
     print('begin train')
 
@@ -138,7 +143,7 @@ with Engine(custom_parser=parser) as engine:
             optimizer.zero_grad()
             engine.update_iteration(epoch, idx)
 
-            minibatch = dataloader.next()
+            minibatch = next(dataloader)
             img = minibatch['data']
             hha = minibatch['hha_img']
             label = minibatch['label']
@@ -238,7 +243,7 @@ with Engine(custom_parser=parser) as engine:
 
             pbar.set_description(print_str, refresh=False)
 
-        if engine.distributed and (engine.local_rank == 0):
+        if engine.distributed and (local_rank == 0):
             logger.add_scalar('train_loss/tot', sum_loss / len(pbar), epoch)
             logger.add_scalar('train_loss/semantic', sum_sem / len(pbar), epoch)
             logger.add_scalar('train_loss/sketch', sum_sketch / len(pbar), epoch)
@@ -248,7 +253,7 @@ with Engine(custom_parser=parser) as engine:
             logger.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
 
         if (epoch > config.nepochs // 4) and (epoch % config.snapshot_iter == 0) or (epoch == config.nepochs - 1):
-            if engine.distributed and (engine.local_rank == 0):
+            if engine.distributed and (local_rank == 0):
                 engine.save_and_link_checkpoint(config.snapshot_dir,
                                                 config.log_dir,
                                                 config.log_dir_link)
