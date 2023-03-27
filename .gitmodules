@@ -1,0 +1,3 @@
+[submodule "furnace/apex"]
+	path = furnace/apex
+	url = https://github.com/NVIDIA/apex.git
